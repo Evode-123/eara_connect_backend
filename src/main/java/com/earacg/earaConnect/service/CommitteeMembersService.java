@@ -169,4 +169,8 @@ public class CommitteeMembersService {
         CommitteeMembers member = getMemberById(memberId);
         return member.getAppointedLetterType();
     }
+
+    public List<CommitteeMembers> getMembersByCountryId(Long countryId) {
+        return membersRepository.findByCountryId(countryId);
+    }
 }

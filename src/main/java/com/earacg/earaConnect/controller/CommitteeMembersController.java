@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
@@ -98,5 +99,10 @@ public class CommitteeMembersController {
             .header(HttpHeaders.CONTENT_DISPOSITION,
                     "attachment; filename=\"" + fileName + "\"")
             .body(letter);
+    }
+
+    @GetMapping("/country/{countryId}")
+    public ResponseEntity<List<CommitteeMembers>> getMembersByCountry(@PathVariable Long countryId) {
+        return ResponseEntity.ok(committeeMembersService.getMembersByCountryId(countryId));
     }
 }

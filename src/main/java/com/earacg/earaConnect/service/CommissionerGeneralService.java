@@ -141,4 +141,8 @@ public class CommissionerGeneralService {
     public void deleteCommissioner(Long id) {
         commissionerGeneralRepository.deleteById(id);
     }
+
+    public List<CommissionerGeneral> getCommissionersByCountryId(Long countryId) {
+        return commissionerGeneralRepository.findByCountryId(countryId);
+    }
 }

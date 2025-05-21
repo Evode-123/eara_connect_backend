@@ -20,6 +20,22 @@ public class CountryService {
     private final EacRepository eacRepository;
     private final RevenueAuthorityRepository revenueAuthorityRepository;
 
+    public void addCustomCountry(String name, String isoCode, Long eacId) {
+        if (countryRepository.existsByName(name)) {
+            throw new IllegalArgumentException("Country already exists");
+        }
+    
+        var eac = eacRepository.findById(eacId)
+                .orElseThrow(() -> new IllegalArgumentException("EAC not found"));
+    
+        Country country = new Country();
+        country.setName(name);
+        country.setIsoCode(isoCode); // Set the ISO code
+        country.setEac(eac);
+    
+        countryRepository.save(country);
+    }
+
     public List<Country> getAllCountries() {
         return countryRepository.findAll();
     }
@@ -40,7 +56,7 @@ public class CountryService {
     @Transactional
     public Country updateCountry(Long id, Country countryDetails) {
         Country country = getCountryById(id);
-        country.setCountryName(countryDetails.getCountryName());
+        country.setName(countryDetails.getName());
         return countryRepository.save(country);
     }
 

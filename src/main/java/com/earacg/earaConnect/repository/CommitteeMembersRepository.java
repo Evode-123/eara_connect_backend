@@ -2,6 +2,7 @@ package com.earacg.earaConnect.repository;
 
 import com.earacg.earaConnect.model.CommitteeMembers;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,5 +20,5 @@ public interface CommitteeMembersRepository extends JpaRepository<CommitteeMembe
            "c.firstLogin, c.gender, c.currentJobPosition, c.department, c.employmentDate) " +
            "FROM CommitteeMembers c WHERE c.email = :email")
     Optional<CommitteeMembers> findByEmailExcludingLob(@Param("email") String email);
-    
+    List<CommitteeMembers> findByCountryId(Long countryId);
 }

@@ -5,6 +5,7 @@ import com.earacg.earaConnect.model.RevenueAuthority;
 import com.earacg.earaConnect.service.CountryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.earacg.earaConnect.dto.CountryRequest;
 
 import java.util.List;
 
@@ -52,6 +53,16 @@ public class CountryController {
     public ResponseEntity<List<RevenueAuthority>> getRevenueAuthoritiesByCountry(
         @PathVariable Long countryId) {
     return ResponseEntity.ok(countryService.getRevenueAuthoritiesByCountry(countryId));
-}
+    }
+
+    @PostMapping("/add-custom")
+    public ResponseEntity<String> addCustomCountry(@RequestBody CountryRequest request) {
+        try {
+            countryService.addCustomCountry(request.getName(), request.getIsoCode(), request.getEacId());
+            return ResponseEntity.ok("Country added successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
 }

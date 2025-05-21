@@ -18,9 +18,9 @@ public class EnumInitializer implements ApplicationRunner {
     private final RevenueAuthorityRepository revenueAuthorityRepository;
 
     public EnumInitializer(PositionRepository positionRepository,
-                         EacRepository eacRepository,
-                         CountryRepository countryRepository,
-                         RevenueAuthorityRepository revenueAuthorityRepository) {
+                           EacRepository eacRepository,
+                           CountryRepository countryRepository,
+                           RevenueAuthorityRepository revenueAuthorityRepository) {
         this.positionRepository = positionRepository;
         this.eacRepository = eacRepository;
         this.countryRepository = countryRepository;
@@ -31,13 +31,13 @@ public class EnumInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         // Initialize EAC first
         Eac eac = initializeEac();
-        
+
         // Initialize Countries
-        Map<Country.CountryName, Country> countries = initializeCountries(eac);
-        
+        Map<String, Country> countries = initializeCountries(eac);
+
         // Initialize Positions
         initializePositions();
-        
+
         // Initialize Revenue Authorities
         initializeRevenueAuthorities(countries);
     }
@@ -51,22 +51,39 @@ public class EnumInitializer implements ApplicationRunner {
         return eacRepository.findAll().get(0);
     }
 
-    private Map<Country.CountryName, Country> initializeCountries(Eac eac) {
+    private Map<String, Country> initializeCountries(Eac eac) {
         if (countryRepository.count() == 0) {
-            Arrays.stream(Country.CountryName.values()).forEach(countryName -> {
+            Map<String, String> predefinedCountriesWithIsoCodes = Map.of(
+                "Rwanda", "RW",
+                "Uganda", "UG",
+                "Kenya", "KE",
+                "Tanzania", "TZ",
+                "Zanzibar", "TZ", // Zanzibar is part of Tanzania, so it uses TZ
+                "Burundi", "BI",
+                "South Sudan", "SS"
+            );
+    
+            predefinedCountriesWithIsoCodes.forEach((countryName, isoCode) -> {
                 Country country = new Country();
-                country.setCountryName(countryName);
+                country.setName(countryName);
+                country.setIsoCode(isoCode); // Set the ISO code
                 country.setEac(eac);
                 countryRepository.save(country);
-                System.out.println("Added country: " + countryName);
+                System.out.println("Added country: " + countryName + " with ISO code: " + isoCode);
             });
         }
+    
         // Return a map of country names to country entities for easy lookup
-        return countryRepository.findAll().stream()
+        Map<String, Country> countries = countryRepository.findAll().stream()
                 .collect(Collectors.toMap(
-                        country -> country.getCountryName(),
+                        Country::getName,
                         country -> country
                 ));
+    
+        // Debugging: Print the countries map
+        System.out.println("Countries map: " + countries);
+    
+        return countries;
     }
 
     private void initializePositions() {
@@ -80,23 +97,28 @@ public class EnumInitializer implements ApplicationRunner {
         }
     }
 
-    private void initializeRevenueAuthorities(Map<Country.CountryName, Country> countries) {
+    private void initializeRevenueAuthorities(Map<String, Country> countries) {
         if (revenueAuthorityRepository.count() == 0) {
             // Create a mapping between authority names and country names
-            Map<RevenueAuthority.AuthorityName, Country.CountryName> authorityToCountry = Map.of(
-                RevenueAuthority.AuthorityName.RWANDA_REVENUE_AUTHORITY, Country.CountryName.RWANDA,
-                RevenueAuthority.AuthorityName.UGANDA_REVENUE_AUTHORITY, Country.CountryName.UGANDA,
-                RevenueAuthority.AuthorityName.KENYA_REVENUE_AUTHORITY, Country.CountryName.KENYA,
-                RevenueAuthority.AuthorityName.TANZANIA_REVENUE_AUTHORITY, Country.CountryName.TANZANIA,
-                RevenueAuthority.AuthorityName.ZANZIBAR_REVENUE_AUTHORITY, Country.CountryName.ZANZIBAR,
-                RevenueAuthority.AuthorityName.OFFICE_BURUNDAIS_DES_RECETTES, Country.CountryName.BURUNDI,
-                RevenueAuthority.AuthorityName.SOUTH_SUDAN_REVENUE_AUTHORITY, Country.CountryName.SOUTH_SUDAN
+            Map<String, String> authorityToCountry = Map.of(
+                "Rwanda Revenue Authority", "Rwanda",
+                "Uganda Revenue Authority", "Uganda",
+                "Kenya Revenue Authority", "Kenya",
+                "Tanzania Revenue Authority", "Tanzania",
+                "Zanzibar Revenue Authority", "Zanzibar",
+                "Office Burundais des Recettes", "Burundi",
+                "South Sudan Revenue Authority", "South Sudan"
             );
-
+    
             authorityToCountry.forEach((authorityName, countryName) -> {
+                Country country = countries.get(countryName); // Retrieve the country by name
+                if (country == null) {
+                    throw new RuntimeException("Country not found for name: " + countryName);
+                }
+    
                 RevenueAuthority authority = new RevenueAuthority();
                 authority.setAuthorityName(authorityName);
-                authority.setCountry(countries.get(countryName));
+                authority.setCountry(country); // Set the country
                 revenueAuthorityRepository.save(authority);
                 System.out.println("Added revenue authority: " + authorityName + " for country: " + countryName);
             });

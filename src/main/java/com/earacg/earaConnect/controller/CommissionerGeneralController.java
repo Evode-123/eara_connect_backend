@@ -73,4 +73,9 @@ public class CommissionerGeneralController {
         commissionerGeneralService.deleteCommissioner(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/country/{countryId}")
+    public ResponseEntity<List<CommissionerGeneral>> getCommissionersByCountry(@PathVariable Long countryId) {
+        return ResponseEntity.ok(commissionerGeneralService.getCommissionersByCountryId(countryId));
+    }
 }
