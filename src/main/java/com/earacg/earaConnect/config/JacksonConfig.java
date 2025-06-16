@@ -1,5 +1,6 @@
 package com.earacg.earaConnect.config;
 
+import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
@@ -7,6 +8,7 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.core.StreamWriteConstraints;
 
 @Configuration
 public class JacksonConfig {
@@ -26,4 +28,17 @@ public class JacksonConfig {
         
         return objectMapper;
     }
+
+    @Bean
+    public Jackson2ObjectMapperBuilderCustomizer jacksonCustomizer() {
+        return builder -> {
+            builder.postConfigurer(objectMapper -> {
+                StreamWriteConstraints swc = StreamWriteConstraints.builder()
+                    .maxNestingDepth(2000) // Increase from default 1000
+                    .build();
+                objectMapper.getFactory().setStreamWriteConstraints(swc);
+            });
+        };
+    }
+        
 }

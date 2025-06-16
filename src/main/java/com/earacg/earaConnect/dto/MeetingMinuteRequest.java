@@ -3,14 +3,19 @@ package com.earacg.earaConnect.dto;
 import com.earacg.earaConnect.model.AgendaItem;
 import com.earacg.earaConnect.model.MeetingMinute;
 import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class MeetingMinuteRequest {
+    private Long userId; // Add this field
     private String meetingNo;
-    private LocalDate date;
+    private LocalDateTime date;
     private String location;
     private MeetingMinute.MeetingType meetingType;
     private String theme;
@@ -18,5 +23,5 @@ public class MeetingMinuteRequest {
     private List<Long> commissionerParticipantIds;
     private List<AgendaItem> agendaItems;
     private List<ResolutionRequest> resolutions;
-    private String userRole; // Added field to pass role explicitly if needed
+    private String userRole;
 }

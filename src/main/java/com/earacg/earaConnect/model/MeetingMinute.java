@@ -2,12 +2,12 @@ package com.earacg.earaConnect.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -26,7 +26,7 @@ public class MeetingMinute {
     private String meetingNo;
     
     @Column(nullable = false)
-    private LocalDate date;
+    private LocalDateTime date;
     
     @Column(nullable = false)
     private String location;
@@ -37,6 +37,9 @@ public class MeetingMinute {
     
     @Column(nullable = false)
     private String theme;
+
+    @Column(name = "status")
+    private MeetingStatus status = MeetingStatus.DRAFT; // New field
     
     @ManyToMany
     @JoinTable(
@@ -64,12 +67,20 @@ public class MeetingMinute {
     @ManyToOne
     @JoinColumn(name = "created_by_commissioner_id")
     private CommissionerGeneral createdByCommissioner;
+
+    @ManyToOne
+    @JoinColumn(name = "admin_id")
+    private Admin createdByAdmin;
     
     @OneToMany(mappedBy = "meetingMinute", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<AgendaItem> agendaItems = new ArrayList<>();
     
     @OneToMany(mappedBy = "meetingMinute", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Resolution> resolutions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "meetingMinute", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MeetingDocument> documents = new ArrayList<>(); // New field for invitation documents
     
     @PrePersist
     public void prePersist() {
@@ -95,5 +106,12 @@ public class MeetingMinute {
         public String toString() {
             return displayName;
         }
+    }
+
+    public enum MeetingStatus {
+        DRAFT,
+        INVITED,
+        COMPLETED,
+        CANCELLED
     }
 }

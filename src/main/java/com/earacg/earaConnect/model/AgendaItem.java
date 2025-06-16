@@ -1,5 +1,6 @@
 package com.earacg.earaConnect.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,6 +25,7 @@ public class AgendaItem {
     private Integer displayOrder;
     
     @ManyToOne
-    @JoinColumn(name = "meeting_minute_id", nullable = false)
+    @JoinColumn(name = "meeting_minute_id")
+    @JsonBackReference
     private MeetingMinute meetingMinute;
 }

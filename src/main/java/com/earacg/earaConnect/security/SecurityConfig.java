@@ -49,18 +49,77 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/change-password").hasAnyAuthority("ROLE_ADMIN", "ROLE_COMMISSIONER_GENERAL", "ROLE_COMMITTEE_MEMBER")
                 .requestMatchers("/api/auth/complete-profile").authenticated()
                 
-                // Admin only endpoints
-                .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
+                // Admin only endpoints - Admin should have access to everything
+                .requestMatchers("/api/admin/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                
+                // Meeting minutes endpoints - Updated with proper role authorities
+                .requestMatchers("/api/meeting-minutes/create-basic").hasAnyAuthority(
+                    "ROLE_SECRETARY", "SECRETARY", 
+                    "ROLE_COMMISSIONER_GENERAL", "COMMISSIONER_GENERAL", 
+                    "ROLE_ADMIN", "ADMIN", 
+                    "ROLE_COMMITTEE_MEMBER", "COMMITTEE_MEMBER"
+                )
+                
+                .requestMatchers("/api/meeting-minutes/**").hasAnyAuthority(
+                    "ROLE_SECRETARY", "SECRETARY", 
+                    "ROLE_COMMISSIONER_GENERAL", "COMMISSIONER_GENERAL", 
+                    "ROLE_ADMIN", "ADMIN", 
+                    "ROLE_COMMITTEE_MEMBER", "COMMITTEE_MEMBER"
+                )
+
+                .requestMatchers("/api/meeting-minutes/create-basic").hasAnyAuthority(
+                        "ROLE_SECRETARY", "SECRETARY", 
+                        "ROLE_COMMISSIONER_GENERAL", "COMMISSIONER_GENERAL", 
+                        "ROLE_ADMIN", "ADMIN",  // Both formats
+                        "ROLE_COMMITTEE_MEMBER", "COMMITTEE_MEMBER"
+                    )
+
+                .requestMatchers("/api/meeting-minutes/documents/download/**").hasAnyAuthority(
+                    "ROLE_SECRETARY", "SECRETARY", 
+                    "ROLE_COMMISSIONER_GENERAL", "COMMISSIONER_GENERAL", 
+                    "ROLE_ADMIN", "ADMIN",
+                    "ROLE_COMMITTEE_MEMBER", "COMMITTEE_MEMBER"
+                )
+
+                .requestMatchers("/api/meeting-minutes/upcoming/**").hasAnyAuthority(
+                    "ROLE_SECRETARY", "SECRETARY", 
+                    "ROLE_COMMISSIONER_GENERAL", "COMMISSIONER_GENERAL", 
+                    "ROLE_ADMIN", "ADMIN", 
+                    "ROLE_COMMITTEE_MEMBER", "COMMITTEE_MEMBER"
+                )
                 
                 // Secretary related endpoints
-                .requestMatchers("/api/meeting-minutes/**", "/meeting-minutes/**").hasAnyAuthority("ROLE_SECRETARY","SECRETARY", "ROLE_COMMISSIONER_GENERAL","COMMISSIONER_GENERAL", "ROLE_ADMIN", "ROLE_COMMITTEE_MEMBER")
-                .requestMatchers("/api/secretary/**").hasAnyAuthority("ROLE_SECRETARY", "ROLE_COMMISSIONER_GENERAL", "ROLE_ADMIN")
+                .requestMatchers("/api/secretary/**").hasAnyAuthority(
+                    "ROLE_SECRETARY", "SECRETARY", 
+                    "ROLE_COMMISSIONER_GENERAL", "COMMISSIONER_GENERAL", 
+                    "ROLE_ADMIN", "ADMIN"
+                )
                 
                 // Entity access endpoints
-                .requestMatchers("/api/commissioner-generals/**").hasAnyAuthority("ROLE_SECRETARY", "ROLE_COMMISSIONER_GENERAL", "ROLE_ADMIN", "ROLE_COMMITTEE_MEMBER")
-                .requestMatchers("/api/committee-members/**").hasAnyAuthority("ROLE_SECRETARY", "ROLE_COMMISSIONER_GENERAL", "ROLE_ADMIN", "ROLE_COMMITTEE_MEMBER")
-                .requestMatchers("/api/positions/**").hasAnyAuthority("ROLE_SECRETARY", "ROLE_COMMISSIONER_GENERAL", "ROLE_ADMIN", "ROLE_COMMITTEE_MEMBER")
-                .requestMatchers("/api/countries/**").hasAnyAuthority("ROLE_SECRETARY", "ROLE_COMMISSIONER_GENERAL", "ROLE_ADMIN", "ROLE_COMMITTEE_MEMBER")
+                .requestMatchers("/api/commissioner-generals/**").hasAnyAuthority(
+                    "ROLE_SECRETARY", "SECRETARY", 
+                    "ROLE_COMMISSIONER_GENERAL", "COMMISSIONER_GENERAL", 
+                    "ROLE_ADMIN", "ADMIN", 
+                    "ROLE_COMMITTEE_MEMBER", "COMMITTEE_MEMBER"
+                )
+                .requestMatchers("/api/committee-members/**").hasAnyAuthority(
+                    "ROLE_SECRETARY", "SECRETARY", 
+                    "ROLE_COMMISSIONER_GENERAL", "COMMISSIONER_GENERAL", 
+                    "ROLE_ADMIN", "ADMIN", 
+                    "ROLE_COMMITTEE_MEMBER", "COMMITTEE_MEMBER"
+                )
+                .requestMatchers("/api/positions/**").hasAnyAuthority(
+                    "ROLE_SECRETARY", "SECRETARY", 
+                    "ROLE_COMMISSIONER_GENERAL", "COMMISSIONER_GENERAL", 
+                    "ROLE_ADMIN", "ADMIN", 
+                    "ROLE_COMMITTEE_MEMBER", "COMMITTEE_MEMBER"
+                )
+                .requestMatchers("/api/countries/**").hasAnyAuthority(
+                    "ROLE_SECRETARY", "SECRETARY", 
+                    "ROLE_COMMISSIONER_GENERAL", "COMMISSIONER_GENERAL", 
+                    "ROLE_ADMIN", "ADMIN", 
+                    "ROLE_COMMITTEE_MEMBER", "COMMITTEE_MEMBER"
+                )
                 
                 // Any other request must be authenticated
                 .anyRequest().authenticated()
@@ -75,11 +134,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // Your React app's origin
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // How long the results of a preflight request can be cached
+        configuration.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

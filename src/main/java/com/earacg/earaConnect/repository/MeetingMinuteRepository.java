@@ -1,6 +1,7 @@
 package com.earacg.earaConnect.repository;
 
 import com.earacg.earaConnect.model.MeetingMinute;
+import com.earacg.earaConnect.model.MeetingMinute.MeetingStatus;
 import com.earacg.earaConnect.model.CommissionerGeneral;
 import com.earacg.earaConnect.model.CommitteeMembers;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface MeetingMinuteRepository extends JpaRepository<MeetingMinute, Long> {
@@ -22,4 +24,7 @@ public interface MeetingMinuteRepository extends JpaRepository<MeetingMinute, Lo
     
     @Query("SELECT mm FROM MeetingMinute mm WHERE :commissioner MEMBER OF mm.commissionerParticipants")
     List<MeetingMinute> findByCommissionerParticipant(@Param("commissioner") CommissionerGeneral commissioner);
+
+    List<MeetingMinute> findByDateAfterAndStatusNot(LocalDateTime date, MeetingStatus status);
+
 }

@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +19,7 @@ public class MeetingMinuteService {
     private final CommitteeMembersRepository committeeMembersRepository;
     private final CommissionerGeneralRepository commissionerGeneralRepository;
     private final ResolutionService resolutionService;
+    private final AdminRepository adminRepository;
 
     public List<MeetingMinute> getAllMeetingMinutes() {
         return meetingMinuteRepository.findAll();
@@ -137,5 +139,90 @@ public class MeetingMinuteService {
     
     public List<MeetingMinute> getMeetingMinutesByMeetingType(MeetingMinute.MeetingType meetingType) {
         return meetingMinuteRepository.findByMeetingType(meetingType);
+    }
+
+    @Transactional
+    public MeetingMinute createBasicMeetingMinute(MeetingMinute meetingMinute, 
+                                                Long createdById,
+                                                String creatorRole) {
+        if (creatorRole == null || createdById == null) {
+            throw new IllegalArgumentException("Creator role and ID cannot be null");
+        }
+
+        try {
+            switch (creatorRole) {
+                case "COMMISSIONER_GENERAL":
+                    CommissionerGeneral commissioner = commissionerGeneralRepository.findById(createdById)
+                        .orElseThrow(() -> new RuntimeException("Commissioner not found with id: " + createdById));
+                    meetingMinute.setCreatedByCommissioner(commissioner);
+                    meetingMinute.setCreatedBy(null);
+                    meetingMinute.setCreatedByAdmin(null);
+                    break;
+                    
+                case "ADMIN":
+                    // Assuming you have an AdminRepository and Admin entity
+                    Admin admin = adminRepository.findById(createdById)
+                     .orElseThrow(() -> new RuntimeException("Admin not found with id: " + createdById));
+                      meetingMinute.setCreatedByAdmin(admin);
+                      meetingMinute.setCreatedBy(null);
+                      meetingMinute.setCreatedByCommissioner(null);
+                      break;
+                    // If you don't have admin-specific tracking, fall through to committee member
+                    
+                default: // For COMMITTEE_MEMBER and any other roles
+                    CommitteeMembers member = committeeMembersRepository.findById(createdById)
+                        .orElseThrow(() -> new RuntimeException("Committee member not found with id: " + createdById));
+                    meetingMinute.setCreatedBy(member);
+                    meetingMinute.setCreatedByCommissioner(null);
+                    meetingMinute.setCreatedByAdmin(null);
+                    break;
+            }
+            
+            return meetingMinuteRepository.save(meetingMinute);
+            
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create meeting minute: " + e.getMessage(), e);
+        }
+    }
+    
+    @Transactional
+    public MeetingMinute addAgendaItems(Long meetingId, List<AgendaItem> agendaItems) {
+        MeetingMinute meeting = getMeetingMinuteById(meetingId);
+        
+        if (agendaItems != null && !agendaItems.isEmpty()) {
+            int order = 1;
+            for (AgendaItem agendaItem : agendaItems) {
+                agendaItem.setMeetingMinute(meeting);
+                agendaItem.setDisplayOrder(order++);
+                agendaItemRepository.save(agendaItem);
+            }
+        }
+        
+        return meeting;
+    }
+    
+    @Transactional
+    public MeetingMinute addResolutions(Long meetingId, List<ResolutionRequest> resolutions) {
+        MeetingMinute meeting = getMeetingMinuteById(meetingId);
+        
+        if (resolutions != null && !resolutions.isEmpty()) {
+            for (ResolutionRequest resolutionRequest : resolutions) {
+                resolutionService.createResolution(meetingId, resolutionRequest);
+            }
+        }
+        
+        return meeting;
+    }
+
+    public List<MeetingMinute> getUpcomingMeetings() {
+        LocalDateTime now = LocalDateTime.now();
+        return meetingMinuteRepository.findByDateAfterAndStatusNot(
+            now, 
+            MeetingMinute.MeetingStatus.COMPLETED
+        );
+    }
+
+    public List<MeetingMinute> findAllMeetingMinutes(){
+        return meetingMinuteRepository.findAll();
     }
 }
